@@ -18,15 +18,17 @@ int invalid_input();
 void my_error();
 
 void initialize_centroids(int d, int k, double **data_points, double **centroids) {
-    for (int i=0 ; i < k ; i++)
-        for (int j=0 ; j < d ; j++)
+    int i, j;
+    for (i=0 ; i < k ; i++)
+        for (j=0 ; j < d ; j++)
             centroids[i][j] = data_points[i][j];
 }
 
 void clear_new_centroids(int d, int k, double **new_centroids, int *cluster_size) {
-    for (int i=0 ; i < k ; i++) {
+    int i, j;
+    for (i=0 ; i < k ; i++) {
         cluster_size[i] = 0;
-        for (int j = 0; j < d; j++)
+        for (j = 0; j < d; j++)
             new_centroids[i][j] = 0;
     }
 }
@@ -34,15 +36,12 @@ void clear_new_centroids(int d, int k, double **new_centroids, int *cluster_size
 void runAlg(int d, int k, int n, int max_iter, double **data_points, double **centroids,
             double **new_centroids, int* clusters_size){
     double **temp;
+    int iter, i;
     initialize_centroids(d, k, data_points, centroids);
-    for (int iter=0 ; iter < max_iter ; iter++) {
-        for (int i=0; i < n ; i++) {
+    for (iter=0 ; iter < max_iter ; iter++) {
+        for (i=0; i < n ; i++) {
             assign_closest_cluster(d, k, data_points[i], centroids, new_centroids, clusters_size);
         }
-        for (int i=0; i < k ; i++) {
-            printf("%d,", clusters_size[i]);
-        }
-        printf("\n");
         update_centroids(d, k, new_centroids, clusters_size);
         if (check_convergence(d, k, centroids, new_centroids) == 1) {
             break;
@@ -55,17 +54,17 @@ void runAlg(int d, int k, int n, int max_iter, double **data_points, double **ce
 }
 
 void assign_closest_cluster(int d, int k, double *data_point, double **centroids, double **new_centroids, int *clusters_size) {
-    int i = find_closest_cluster(d, k, data_point, centroids);
+    int j, i = find_closest_cluster(d, k, data_point, centroids);
     clusters_size[i]++;
-    for (int j=0; j < d ; j++) {
+    for (j=0; j < d ; j++) {
         new_centroids[i][j] += data_point[j];
     }
 }
 
 int find_closest_cluster(int d, int k, double *data_point, double **centroids) {
-    int closest_cluster = 0;
+    int i, closest_cluster = 0;
     double distance, min_distance = distance_of_two_points(d, data_point, centroids[0]);
-    for (int i=1 ; i < k ; i++) {
+    for (i=1 ; i < k ; i++) {
         distance = distance_of_two_points(d, data_point, centroids[i]);
         if (distance < min_distance) {
             min_distance = distance;
@@ -76,15 +75,17 @@ int find_closest_cluster(int d, int k, double *data_point, double **centroids) {
 }
 
 void update_centroids(int d, int k, double **new_centroids, int* clusters_size) {
-    for (int i=0; i < k ; i++) {
-        for (int j=0; j < d ; j++) {
+    int i, j;
+    for (i=0; i < k ; i++) {
+        for (j=0; j < d ; j++) {
             new_centroids[i][j] /= clusters_size[i];
         }
     }
 }
 
 int check_convergence(int d, int k, double **centroids, double **new_centroids) {
-    for (int i=0; i < k ; i++) {
+    int i;
+    for (i=0; i < k ; i++) {
         double distance = distance_of_two_points(d, centroids[i], new_centroids[i]);
         if (sqrt(distance) >= EPSILON) {
             return 0;
@@ -94,8 +95,9 @@ int check_convergence(int d, int k, double **centroids, double **new_centroids) 
 }
 
 double distance_of_two_points(int d, double *p1, double *p2) {
+    int i;
     double result = 0;
-    for (int i=0; i < d ; i++) {
+    for (i=0; i < d ; i++) {
         result += pow(p1[i] - p2[i], 2);
     }
     return result;
@@ -110,9 +112,10 @@ int* allocate_memory_array_of_size(int k) {
 double** allocate_memory_array_of_points(int d, int array_size) {
     double *p;
     double **a;
+    int i;
     p = calloc(d * array_size, sizeof(double));
     a = calloc(array_size, sizeof(double *));
-    for(int i=0 ; i < array_size ; i++ )
+    for(i=0 ; i < array_size ; i++ )
         a[i] = p+ i * d;
     assert(a != NULL);
     assert(p != NULL);
@@ -121,12 +124,11 @@ double** allocate_memory_array_of_points(int d, int array_size) {
 
 void find_d_n(int *result, char* input) {
     FILE *fileptr;
-    int n = 1, d = 0;
+    int n = 1, d = 0, ch=0;;
     fileptr = fopen(input, "r");
     if (fileptr == NULL) {
         my_error();
     }
-    int ch=0;
     while ((ch = fgetc(fileptr)) != '\n') {
         if (ch == ',')
             d++;
@@ -145,13 +147,12 @@ void find_d_n(int *result, char* input) {
 
 void get_data_points(int d, int n, double **data_points, char *input) {
     FILE *f;
-    f = fopen(input, "r");
-    int result;
-    char str[32];
-    char *p;
+    int result, i, j;
+    char str[32], *p;
     double data;
-    for (int i = 0 ; i < n ; i++) {
-        for (int j = 0; j < d; j++) {
+    f = fopen(input, "r");
+    for (i = 0 ; i < n ; i++) {
+        for (j = 0; j < d; j++) {
             result = fscanf(f, "%31[^,\n]", str);
             if (result == 0)
                 my_error();
@@ -165,9 +166,10 @@ void get_data_points(int d, int n, double **data_points, char *input) {
 
 void save_to_output(int d, int k, double **centroids, char *output) {
     FILE *f;
+    int i, j;
     f = fopen(output, "w");
-    for (int i = 0 ; i < k ; i++) {
-        for (int j = 0; j < d-1; j++) {
+    for (i = 0 ; i < k ; i++) {
+        for (j = 0; j < d-1; j++) {
             fprintf(f, "%.4f,", centroids[i][j]);
         }
         fprintf(f, "%.4f\n", centroids[i][d-1]);
@@ -177,27 +179,17 @@ void save_to_output(int d, int k, double **centroids, char *output) {
 
 
 void run_logic(int k, int max_iter, char* input, char* output) {
-    int result[2];
+    int result[2], d, n, *cluster_size;
+    double **data_points, **centroids, **new_centroids;
     find_d_n(result, input);
-    int d = result[0];
-    int n = result[1];
-    double **data_points = allocate_memory_array_of_points(result[0], result[1]);
-    double **centroids = allocate_memory_array_of_points(d, k);
-    double **new_centroids = allocate_memory_array_of_points(d, k);
-    int *cluster_size = allocate_memory_array_of_size(k);
+    d = result[0];
+    n = result[1];
+    data_points = allocate_memory_array_of_points(result[0], result[1]);
+    centroids = allocate_memory_array_of_points(d, k);
+    new_centroids = allocate_memory_array_of_points(d, k);
+    cluster_size = allocate_memory_array_of_size(k);
     get_data_points(d, n, data_points, input);
-    /*
-    for (int i = 0 ; i < n ; i++) {
-        printf("%d ", i+1);
-        for (int j = 0; j < d; j++) {
-            double data = data_points[i][j];
-            printf("%.4f,", data);
-        }
-        printf("\n");
-    }
-     **/
     runAlg(d, k, n, max_iter, data_points, centroids, new_centroids, cluster_size);
-    //save_to_output(d, n, data_points, "data_points.txt");
     free(data_points);
     free(new_centroids);
     free(cluster_size);
@@ -217,14 +209,15 @@ void my_error(){
 
 
 int main(int argc, char *argv[]) {
+    char *p;
+    int k, max_iter = DEFAULT_MAX_ITER;;
     if ((argc != 5) && (argc != 4))
         return invalid_input();
-    char *p;
-    int k = strtol(argv[1], &p, 10);
+
+    k = strtol(argv[1], &p, 10);
     if (*p != '\0' || errno != 0 || k < 1)
         return invalid_input();
 
-    int max_iter = DEFAULT_MAX_ITER;
     if (argc == 5) {
         max_iter =  strtol(argv[2], &p, 10);
         if (*p != '\0' || errno != 0 || max_iter < 1)
